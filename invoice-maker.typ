@@ -329,8 +329,12 @@
       #{if "country" in recipient.address { [#recipient.address.country \ ] }}
       #recipient.address.city #recipient.address.postal-code \
       #recipient.address.street \
-      #{if recipient.vat-id.starts-with("DE"){"USt-IdNr.:"}}
-        #recipient.vat-id
+      #{if "vat-id" in recipient {
+        {if recipient.vat-id.starts-with("DE"){"USt-IdNr.:"}}
+        recipient.vat-id
+      } else { 
+        t.no-vat 
+      }}
 
       === #t.biller
       #v(0.5em)
@@ -339,8 +343,12 @@
       #{if "country" in biller.address { [#biller.address.country \ ] }}
       #biller.address.city #biller.address.postal-code \
       #biller.address.street \
-      #{if biller.vat-id.starts-with("DE"){"USt-IdNr.:"}}
-        #biller.vat-id
+      #{if "vat-id" in biller {
+        {if biller.vat-id.starts-with("DE"){"USt-IdNr.:"}}
+        biller.vat-id
+      } else { 
+        t.no-vat 
+      }}
     ]
   ]
 
@@ -434,8 +442,13 @@
       else { panic(["#discount.type" is no valid discount type]) }
     }
   let has-reverse-charge = {
-        biller.vat-id.slice(0, 2) != recipient.vat-id.slice(0, 2)
-      }
+    { 
+      "vat-id" in biller 
+    } and {
+      "vat-id" in recipient 
+    } and {
+      biller.vat-id.slice(0, 2) != recipient.vat-id.slice(0, 2)
+    }}
   let tax = if has-reverse-charge { 0 } else { sub-total * vat }
   let total = sub-total - discount-value + tax
 
